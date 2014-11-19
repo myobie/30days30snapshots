@@ -15,12 +15,17 @@
                (nil? body) => false)))
 
 (facts "about `request`"
-       (defn do-request []
+       (defn do-successful-request []
          (couch/request {:method :get :url db-url}))
-       (let [response (do-request)]
+       (let [response (do-successful-request)]
          (fact "it will call to couch"
                (:status response) => 200)
          (fact "it will parse json automatically"
                (let [json (:json response)]
-                 (:couchdb json) => "Welcome"))))
+                 (:couchdb json) => "Welcome")))
+
+       (defn do-missing-request []
+         (couch/request {:method :get :url (str db-url "missing")}))
+       (fact "it will not raise"
+             (do-missing-request) => (throws)))
 

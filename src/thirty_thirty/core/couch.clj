@@ -23,10 +23,35 @@
        (catch Exception e
          response)))
 
+(defn- raise
+  [msg error response]
+  (throw (ex-info msg {:error error :code (:status response) :response response})))
+
+(defn- raise-client-error
+  [error response]
+  (raise "client error" error response))
+
+(defn- validate-response
+  [response]
+  (let [status (:status response)]
+    (if (>= status 400)
+
+      (case status
+        404 (case (:reason response)
+              "no_db_file" (raise-client-error "database-not-found" response)
+              "Document is missing attachment" (raise-client-error "attachment-not-found" response)
+              (raise-client-error "document-not-found" response))
+        409 (raise-client-error "resource-conflict" response)
+        412 (raise-client-error "precondition-failed" response)
+        (raise "internal server error" "server-error" response))
+
+      response)))
+
 (defn request*
   [response]
   (-> response
-      read-json-response))
+      read-json-response
+      validate-response))
 
 (defn request
   [opts]
