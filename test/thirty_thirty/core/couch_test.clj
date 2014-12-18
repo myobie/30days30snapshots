@@ -26,6 +26,36 @@
 
        (defn do-missing-request []
          (couch/request {:method :get :url (str db-url "missing")}))
-       (fact "it will not raise"
+       (fact "it will raise"
              (do-missing-request) => (throws)))
 
+(def db-name "test-database-create")
+
+(try (couch/database-delete db-name)
+  (catch Exception e))
+
+(facts "about `databases`"
+       (defn do-request []
+         (couch/databases db-url))
+       (fact "it doesn't raise"
+             (do-request) =not=> (throws))
+       (let [response (do-request)
+             length   (count response)]
+         (fact "it will return some databases"
+               (compare length 1) => 1)))
+
+(facts "about `database-create`"
+       (defn do-request []
+         (couch/database-create db-url db-name))
+       (let [response (do-request)]
+         (fact "it was successful"
+               (:ok response) => truthy))
+       (couch/database-delete db-url db-name))
+
+(facts "about `database-delete`"
+       (couch/database-create db-url db-name)
+       (defn do-request []
+         (couch/database-delete db-url db-name))
+       (let [response (do-request)]
+         (fact "it was successful"
+               (:ok response) => truthy)))

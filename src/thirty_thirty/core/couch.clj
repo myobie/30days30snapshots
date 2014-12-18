@@ -57,30 +57,37 @@
   [opts]
   (request* (http-request opts)))
 
-; (defn- normalize-url
-;   "If not present, appends a / to the url-string."
-;   [url]
-;   (if-not (= (last url) \/)
-;     (str url \/ )
-;     url))
+(defn couch-request
+  [opts]
+  (:json (request opts)))
 
-; (defn database-list
-;   [db-url]
-;   (:json (couch-request {:url    (str (normalize-url db-url))
-;                     :method :get})))
+(defn- normalize-url
+  "If not present, appends a / to the url-string."
+  [url]
+  (if-not (= (last url) \/)
+    (str url \/ )
+    url))
 
-; (defn database-info
-;   [db-url db-name]
-;   )
+(defn- database-request
+  [db-url db-name method]
+  (couch-request {:url    (str (normalize-url db-url) db-name)
+                  :method method}))
 
-; (defn database-create
-;   [db-url db-name]
-;   )
+(defn databases
+  [db-url]
+  (database-request db-url "_all_dbs" :get))
 
-; (defn database-delete
-;   [db-url db-name]
-;   )
+(defn database
+  [db-url db-name]
+  (database-request db-url db-name :get))
 
-; (defn database-compact
-;   [db-url db-name]
-;   )
+(defn database-create
+  [db-url db-name]
+  (database-request db-url db-name :put))
+
+(defn database-delete
+  [db-url db-name]
+  (database-request db-url db-name :delete))
+
+; (defn database-compact [db-url db-name])
+; (defn database-replicate [source-db-url source-db-name target-db-url target-db-name])
